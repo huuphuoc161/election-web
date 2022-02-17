@@ -1,0 +1,16 @@
+.content {
+  text-align: center;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+}
+
+.header .sub-header .title {
+  text-align: center;
+}
+
+.table-data {
+  padding: 50px 10%;
+}
