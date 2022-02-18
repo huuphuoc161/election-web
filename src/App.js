@@ -1,15 +1,20 @@
 import election from './assets/images/election.png';
 import './App.css';
 import React, { useEffect, useState } from 'react';
-import { Table, Input, InputNumber, Popconfirm, Form, Typography, Button, Modal } from 'antd';
-
+import { Table, Input, InputNumber, Popconfirm, Form, Typography, Button, Modal, Select } from 'antd';
 import xlsx from 'json-as-xlsx';
 const originData = [];
+
+
+const { Option } = Select;
+
 
 for (let i = 1; i <= 100; i++) {
   originData.push({
     key: i.toString(),
     name: ``,
+    birthday: '',
+    gender: '',
     vote: 0
   });
 }
@@ -24,7 +29,13 @@ const EditableCell = ({
   children,
   ...restProps
 }) => {
-  const inputNode = inputType === 'number' ? <InputNumber /> : <Input />;
+  let inputNode = inputType === 'number' ? <InputNumber /> : <Input />;
+  if (inputType === 'selectBox') {
+    inputNode = <Select defaultValue="">
+      <Option value="Nam">Nam</Option>
+      <Option value="Nữ">Nữ</Option>
+    </Select>
+  }
   return (
     <td {...restProps}>
       {editing ? (
@@ -71,7 +82,7 @@ function App() {
   }
 
   const clearAllData = () => {
-    const newData = [...data].map(x => ({ ...x, name: '', vote: 0 }));
+    const newData = [...data].map(x => ({ ...x, name: '', birthday: '', gender: '', vote: 0 }));
     setData(newData);
     localStorage.removeItem('data');
   }
@@ -98,9 +109,11 @@ function App() {
         columns: [
           { label: 'STT', value: 'key' },
           { label: 'Họ và Tên', value: 'name' },
+          { label: 'Năm Sinh', value: 'birthday' },
+          { label: 'Giới Tính', value: 'gender' },
           { label: 'Số Phiếu Bầu', value: 'vote' },
         ],
-        content: newResutData.map(x => ({ ...x, vote: parseInt(x.vote) || 0 }))
+        content: newResutData.map((x, index) => ({ ...x, key: index + 1, vote: parseInt(x.vote) || 0 }))
       }
     ]
 
@@ -117,6 +130,8 @@ function App() {
     form.setFieldsValue({
       name: '',
       vote: '',
+      birthday: '',
+      gender: '',
       ...record,
     });
     setEditingKey(record.key);
@@ -189,8 +204,20 @@ function App() {
     {
       title: 'Họ và Tên',
       dataIndex: 'name',
-      width: '50%',
+      width: '35%',
       editable: true,
+    },
+    {
+      title: 'Năm Sinh',
+      dataIndex: 'birthday',
+      width: '7.5%',
+      editable: true,
+    },
+    {
+      title: 'Giới Tính',
+      dataIndex: 'gender',
+      width: '7.5%',
+      editable: true
     },
     {
       title: 'Số Phiếu Bầu',
@@ -242,17 +269,27 @@ function App() {
     {
       title: 'STT',
       dataIndex: 'key', //address
-      width: '10px',
+      width: '5%',
     },
     {
       title: 'Họ và Tên',
       dataIndex: 'name',
-      width: '60%',
+      width: '55%',
+    },
+    {
+      title: 'Năm Sinh',
+      dataIndex: 'birthday',
+      width: '10%',
+    },
+    {
+      title: 'Giới Tính',
+      dataIndex: 'gender',
+      width: '10%',
     },
     {
       title: 'Số Phiếu Bầu',
       dataIndex: 'vote', //age
-      width: '30%'
+      width: '20%'
     }
   ];
 
@@ -260,12 +297,13 @@ function App() {
     if (!col.editable) {
       return col;
     }
+    const numFields = ['birthday', 'vote'];
 
     return {
       ...col,
       onCell: (record) => ({
         record,
-        inputType: col.dataIndex === 'age' ? 'number' : 'text',
+        inputType: numFields.includes(col.dataIndex) ? 'number' : col.dataIndex === 'gender' ? 'selectBox' : 'text',
         dataIndex: col.dataIndex,
         title: col.title,
         editing: isEditing(record),
@@ -275,20 +313,11 @@ function App() {
   return (
     <div className='content'>
       <div className='logo'>
-          <img src={election} width="42%" />
-        </div>
+        <img src={election} width="42%" />
+      </div>
       <div className='header'>
-        
-
-        {/* <div className='sub-header'>
-          <div className='title'>
-            <Typography.Title level={2} style={{ margin: 0 }}>HỘI THÁNH TIN LÀNH VIỆT NAM</Typography.Title>
-            <Typography.Title level={2} style={{ margin: 0 }}>CHI HỘI PHƯỚC KIỂN</Typography.Title>
-          </div>
-        </div> */}
       </div>
 
-      {/* <Typography.Title level={3} style={{ margin: 0, marginTop: '20px' }}>HỘI ĐỒNG BẦU CỬ BAN CHẤP SỰ 2022-2023</Typography.Title> */}
       <Form form={form} component={false}>
         <Table
           components={{
@@ -315,14 +344,14 @@ function App() {
         <Button onClick={showResult}>Xem kết quả</Button>
         <Button onClick={exportResult}>Xuất kết quả</Button>
         <Button>
-            <Popconfirm title="Xác nhận xóa?" onConfirm={clearVotes}>
-              <a>Xóa tất cả phiếu bầu</a>
-            </Popconfirm>
+          <Popconfirm title="Xác nhận xóa?" onConfirm={clearVotes}>
+            <a>Xóa tất cả phiếu bầu</a>
+          </Popconfirm>
         </Button>
         <Button>
-            <Popconfirm title="Xác nhận xóa?" onConfirm={clearAllData}>
-              <a>Xóa tất cả dữ liệu</a>
-            </Popconfirm>
+          <Popconfirm title="Xác nhận xóa?" onConfirm={clearAllData}>
+            <a>Xóa tất cả dữ liệu</a>
+          </Popconfirm>
         </Button>
       </Form>
     </div>
