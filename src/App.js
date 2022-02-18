@@ -314,8 +314,16 @@ function App() {
 
         <Button onClick={showResult}>Xem kết quả</Button>
         <Button onClick={exportResult}>Xuất kết quả</Button>
-        <Button onClick={clearVotes}>Xóa tất cả phiếu bầu</Button>
-        <Button onClick={clearAllData}>Xóa tất cả dữ liệu</Button>
+        <Button>
+            <Popconfirm title="Xác nhận xóa?" onConfirm={clearVotes}>
+              <a>Xóa tất cả phiếu bầu</a>
+            </Popconfirm>
+        </Button>
+        <Button>
+            <Popconfirm title="Xác nhận xóa?" onConfirm={clearAllData}>
+              <a>Xóa tất cả dữ liệu</a>
+            </Popconfirm>
+        </Button>
       </Form>
     </div>
   );
