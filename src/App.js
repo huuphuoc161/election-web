@@ -1,13 +1,15 @@
 import election from './assets/images/election.png';
 import './App.css';
 import React, { useEffect, useState } from 'react';
-import { Table, Input, InputNumber, Popconfirm, Form, Typography, Button, Modal, Select } from 'antd';
+import { Table, Input, InputNumber, Popconfirm, Form, Typography, Button, Modal, Select, Upload, message } from 'antd';
 import xlsx from 'json-as-xlsx';
+import * as XLSX from "xlsx";
+
+import { convertStringToJson, convert2ElectionData } from './utils';
+
 const originData = [];
 
-
 const { Option } = Select;
-
 
 for (let i = 1; i <= 100; i++) {
   originData.push({
@@ -67,6 +69,47 @@ function App() {
   const [resultData, setResultData] = useState([]);
   const [isShowResult, setIsShowResult] = useState(false);
   const [editingKey, setEditingKey] = useState('');
+
+  const uploadProps = {
+    name: 'file',
+    async beforeUpload(file) {
+      const validFormats = [
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'application/vnd.ms-excel'
+      ]
+
+      if (!validFormats.includes(file.type)) {
+        message.error('Định dạng không hỗ trợ!');
+        return false;
+      }
+
+      const reader = new FileReader();
+  
+      reader.onload = e => {
+        const wb = XLSX.read(e.target.result, { type: "binary"});
+  
+        const wsname = wb.SheetNames[0];
+        const ws = wb.Sheets[wsname];
+    
+        const data = XLSX.utils.sheet_to_csv(ws, { header: 1 });
+
+        const { data: resultData, hasError } = convert2ElectionData(convertStringToJson(data));
+        console.log({resultData, hasError})
+        if (hasError) {
+          message.error('Tải dữ liệu thất bại!');
+        } else {
+          setData(resultData);
+          message.success('Tải dữ liệu thành công!');
+        }
+      };
+  
+      reader.onerror = () => console.log('error');
+  
+      reader.readAsBinaryString(file);
+  
+      return false;
+    }
+  }  
 
   useEffect(() => {
     const existedData = JSON.parse(localStorage.getItem('data') || 'null');
@@ -221,21 +264,40 @@ function App() {
     },
     {
       title: 'Số Phiếu Bầu',
-      dataIndex: 'vote', //age
-      width: '20%',
-      editable: true
+      dataIndex: 'vote', 
+      width: '15%',
+      editable: true,
+      key: 'vote',
+      render: (vote) => {
+        return (
+          <Typography.Text className='vote'>{vote}</Typography.Text>
+        )
+      }
     },
     {
       title: 'Bầu Chọn',
-      dataIndex: 'voteAction', //operation
-      render: (_, record) => {
-        return (
-          <Typography.Link>
-            <Button type="primary" onClick={() => addVote(record)}>+</Button>
-            <Button type="danger" onClick={() => subtractVote(record)} style={{ marginLeft: '10px' }}>-</Button>
-          </Typography.Link>
-        )
-      },
+      children: [
+        {
+          title: 'Tăng',
+          render: (_, record) => {
+            return (
+              <Typography.Link>
+                <Button type="primary" onClick={() => addVote(record)}>+</Button>
+              </Typography.Link>
+            )
+          },
+        },
+        {
+          title: 'Giảm',
+          render: (_, record) => {
+            return (
+              <Typography.Link>
+                <Button type="danger" onClick={() => subtractVote(record)}>-</Button>
+              </Typography.Link>
+            )
+          },
+        },
+      ]
     },
     {
       title: 'Chỉnh Sửa',
@@ -289,7 +351,7 @@ function App() {
     {
       title: 'Số Phiếu Bầu',
       dataIndex: 'vote', //age
-      width: '20%'
+      width: '15%'
     }
   ];
 
@@ -341,18 +403,23 @@ function App() {
           <Table columns={resultColumns} dataSource={resultData} className="result-table" />
         </Modal>
 
-        <Button onClick={showResult}>Xem kết quả</Button>
-        <Button onClick={exportResult}>Xuất kết quả</Button>
-        <Button>
-          <Popconfirm title="Xác nhận xóa?" onConfirm={clearVotes}>
-            <a>Xóa tất cả phiếu bầu</a>
-          </Popconfirm>
-        </Button>
-        <Button>
-          <Popconfirm title="Xác nhận xóa?" onConfirm={clearAllData}>
-            <a>Xóa tất cả dữ liệu</a>
-          </Popconfirm>
-        </Button>
+        <div className='btn-action'>
+          <Upload {...uploadProps} showUploadList={false}>
+            <Button>Tải dữ liệu</Button>
+          </Upload>
+          <Button onClick={showResult}>Xem kết quả</Button>
+          <Button onClick={exportResult}>Xuất kết quả</Button>
+          <Button>
+            <Popconfirm title="Xác nhận xóa?" onConfirm={clearVotes}>
+              <a>Xóa tất cả phiếu bầu</a>
+            </Popconfirm>
+          </Button>
+          <Button>
+            <Popconfirm title="Xác nhận xóa?" onConfirm={clearAllData}>
+              <a>Xóa tất cả dữ liệu</a>
+            </Popconfirm>
+          </Button>
+        </div>
       </Form>
     </div>
   );

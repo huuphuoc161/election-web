@@ -21,7 +21,7 @@ body {
 .ant-btn-primary {
   background-color: #69c0ff;
   border: none;
-  border-radius: 25%;
+  border-radius: 10%;
   width: 40px;
 }
 
@@ -34,7 +34,7 @@ body {
 .ant-btn-danger {
   background-color: #ff4d4f;
   border: none;
-  border-radius: 25%;
+  border-radius: 10%;
   width: 40px;
 }
 
@@ -60,4 +60,10 @@ thead:hover {
 
 .ant-table-tbody > tr.ant-table-row > td:nth-child(2) {
   text-align: left;
+}
+
+.ant-typography.vote {
+  color: #FC4F4F;
+  font-size: 20px;
+  font-weight: bolder;
 }
